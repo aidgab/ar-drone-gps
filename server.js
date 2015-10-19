@@ -21,8 +21,11 @@ var io  = require('socket.io').listen(server)
 
 io.set('destroy upgrade', false)
 
+
+var drone = require('./drone');
+
 io.sockets.on('connection', function(socket) {
-  console.log('connection')
+  console.log('Socket.io client connected')
 
   socket.on('control', function(ev) { 
     console.log('[control]', JSON.stringify(ev)); 
@@ -34,18 +37,18 @@ io.sockets.on('connection', function(socket) {
   })
 
   socket.on('takeoff', function(data){
-    console.log('takeoff', data)
-    client.takeoff()
+    console.log('takeoff', data);
+    drone.takeoff();
   })  
   
   socket.on('land', function(data){
     console.log('land', data)
-    client.land()
+    drone.land();
   })
   
   socket.on('reset', function(data){
     console.log('reset', data)
-    client.disableEmergency()
+    drone.disableEmergency();
   })
   socket.on('phone', function(data){
     console.log('phone', data)
@@ -63,15 +66,6 @@ io.sockets.on('connection', function(socket) {
   },1000)
 });
 
-var arDrone  = require('ar-drone');
-var PID      = require('./PID');
-var vincenty = require('node-vincenty');
-
-var yawPID = new PID(1.0, 0, 0.30);
-var client = arDrone.createClient();
-
-client.config('general:navdata_demo', 'FALSE');
-
 var targetLat, targetLon, targetYaw, cyaw, currentLat, currentLon,currentDistance, currentYaw, phoneAccuracy;
 var battery = 0;
 
@@ -80,7 +74,7 @@ var stop = function(){
   targetYaw = null
   targetLat = null
   targetLon = null
-  client.stop()
+  drone.stop();
 }
 
 var handleNavData = function(data){
@@ -120,8 +114,6 @@ var handleNavData = function(data){
     stop()
   }
 }
-
-client.on('navdata', handleNavData);
 
 function within(x, min, max) {
   if (x < min) {

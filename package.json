@@ -5,10 +5,11 @@
   "main": "index.js",
   "dependencies": {
     "ar-drone": "git://github.com/felixge/node-ar-drone.git#master",
-    "node-vincenty": "0.0.6",
-    "socket.io": "~0.9.16",
+    "dronestream": "~1.1.1",
     "express": "~3.4.0",
-    "dronestream": "~1.1.1"
+    "node-pid-controller": "^0.1.1",
+    "node-vincenty": "0.0.6",
+    "socket.io": "~0.9.16"
   },
   "devDependencies": {},
   "scripts": {
