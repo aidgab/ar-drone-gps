@@ -45,6 +45,9 @@ function Drone (params)
                 else {
                     client.counterClockwise(Math.abs(correction));
                 }
+                if (Math.abs(data.demo.rotation.yaw-this._yawPidController.target)<this._yawPrecision){
+                    this.emit('yawReached', {target: this._yawPidController.target, current: data.demo.rotation.yaw});
+                }
             }
         }
         catch (e){
@@ -55,6 +58,7 @@ function Drone (params)
     };
 
     this._yawPidController = null;
+    this._yawPrecision=1; //constant yaw orientation precision
     client.on('navdata', this._onNavData.bind(this));
 };
 
@@ -63,15 +67,15 @@ util.inherits(Drone, EventEmitter);
 /**
  * Takeoff method
  */
-Drone.prototype.takeoff = function () {
-    client.takeoff();
+Drone.prototype.takeoff = function (callback) {
+    client.takeoff(callback);
 };
 
 /**
  * Land method
  */
-Drone.prototype.land = function () {
-    client.land();
+Drone.prototype.land = function (callback) {
+    client.land(callback);
 };
 
 /**
@@ -85,8 +89,11 @@ Drone.prototype.disableEmergency = function () {
  * Stop moving
  */
 Drone.prototype.stop = function stop() {
-    this._yawPidController.reset();
-    this._yawPidController = null;
+    if (this._yawPidController){
+        this._yawPidController.reset();
+        this._yawPidController = null;
+    }
+
     client.stop();
 };
 
@@ -100,3 +107,20 @@ Drone.prototype.setYaw = function (targetYaw) {
 
     this._yawPidController.setTarget(targetYaw);
 };
+
+/**
+ * Fly forward
+ * @param speed
+ */
+Drone.prototype.front = function (speed) {
+    client.front(speed);
+};
+
+/**
+ * Fly backward
+ * @param speed
+ */
+Drone.prototype.back = function (speed) {
+    client.back(speed);
+};
+
