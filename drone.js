@@ -3,6 +3,11 @@
  * Created by Aidar on 16.10.2015.
  */
 
+//todo fix hardcoded coeeficients
+const YAW_PID_P=5;
+const YAW_PID_I=0.1;
+const YAW_PID_D=0;
+
 var arDrone  = require('ar-drone');
 var vincenty = require('node-vincenty');
 
@@ -35,18 +40,25 @@ function Drone (params)
     //set nav data callback
     this._onNavData = function (data){
         try {
-            if (this._yawPidController){
-                var correction=this._yawPidController.update(data.demo.rotation.yaw);
+            if (this._yawPidController && this.desiredYaw){
+                var currentYaw=(this.desiredYaw.mode=='magneto') ? data.magneto.heading.fusionUnwrapped : data.demo.rotation.yaw;
+                var correction=this._yawPidController.update(currentYaw);
                 correction=within(correction/360,-1,1);
-                console.log(data.demo.rotation.yaw+' - ',correction, data.demo.batteryPercentage);
+                try{
+                    console.log('Rot: '+data.demo.rotation.yaw, 'Mag: '+Math.abs(data.magneto.heading.fusionUnwrapped), data.demo.batteryPercentage);
+                }
+                catch (ee){
+                    console.warn(ee);
+                }
+
                 if (correction>0){
                     client.clockwise(correction);
                 }
                 else {
                     client.counterClockwise(Math.abs(correction));
                 }
-                if (Math.abs(data.demo.rotation.yaw-this._yawPidController.target)<this._yawPrecision){
-                    this.emit('yawReached', {target: this._yawPidController.target, current: data.demo.rotation.yaw});
+                if (Math.abs(currentYaw-this._yawPidController.target)<this._yawPrecision){
+                    this.emit('yawReached', {target: this.desiredYaw, current: currentYaw});
                 }
             }
         }
@@ -57,8 +69,10 @@ function Drone (params)
         this.emit('navdata', data);
     };
 
+    //Object properties
+    this.desiredYaw=null;
     this._yawPidController = null;
-    this._yawPrecision=1; //constant yaw orientation precision
+    this._yawPrecision=2; //constant yaw orientation precision
     client.on('navdata', this._onNavData.bind(this));
 };
 
@@ -98,14 +112,33 @@ Drone.prototype.stop = function stop() {
 };
 
 /**
+ * Utilizes PID to set up the desired orientation
+ * @param angle
+ * @param mode 'gyro' | 'magneto'
+ */
+Drone.prototype.setDesiredYaw = function (angle, mode){
+    this.desiredYaw={
+        value: angle,
+        mode: mode
+    };
+
+    this._yawPidController = new PIDController(YAW_PID_P, YAW_PID_I, YAW_PID_D);
+    this._yawPidController.setTarget(angle);
+};
+/**
  * Set desired yaw orientation by using PID control
  * @param targetYaw
  */
-Drone.prototype.setYaw = function (targetYaw) {
-    //todo fix hardcoded coeeficients
-    this._yawPidController = new PIDController(5, 0.1, 0.0);
+Drone.prototype.setGyroYaw = function (targetYaw) {
+    this.setDesiredYaw(targetYaw, 'gyro')
+};
 
-    this._yawPidController.setTarget(targetYaw);
+/**
+ * Sets desire magneto yaw for PID controller
+ * @param targetYaw
+ */
+Drone.prototype.setMagnetoYaw = function (targetYaw) {
+    this.setDesiredYaw(targetYaw, 'magneto');
 };
 
 /**
