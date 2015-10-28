@@ -164,6 +164,7 @@ body{
     function setCurrentTarget(lat, lon){
       targetLat = lat
       targetLon = lon
+      alert('qwewqe');
       socket.emit('go', {lat: targetLat, lon: targetLon})
     }
     
@@ -208,6 +209,9 @@ body{
            activeWaypoints = waypoints.slice(0);
            // go to next waypoint
            setCurrentTarget(activeWaypoints[0][0], activeWaypoints[0][1])
+         }
+         else {
+           alert('Please set a route');
          }
        })
        $('#follow').click(function(){

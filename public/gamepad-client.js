@@ -46,7 +46,7 @@
             requestAnimationFrame(__controlLoop);
 
             // TODO: only works in newer versions of chrome, adapt for mozilla-API…
-            var gamepad = navigator.webkitGetGamepads()[0];
+            var gamepad = navigator.getGamepads()[0];
 
             // TODO: emit events gamepadConnect/gamepadDisconnect
             if(!gamepad) { return; }

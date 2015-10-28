@@ -17,12 +17,15 @@ server.listen(8080);
 
 require("dronestream").listen(server);
 
+var vincenty = require('node-vincenty');
 var io  = require('socket.io').listen(server)
 
 io.set('destroy upgrade', false)
 
+var Drone = require('./drone');
+var drone = new Drone();
 
-var drone = require('./drone');
+drone.disableEmergency();
 
 io.sockets.on('connection', function(socket) {
   console.log('Socket.io client connected')
@@ -30,16 +33,22 @@ io.sockets.on('connection', function(socket) {
   socket.on('control', function(ev) { 
     console.log('[control]', JSON.stringify(ev)); 
     if(ev.action == 'animate'){
-      client.animate(ev.animation, ev.duration)
+      //client.animate(ev.animation, ev.duration)
     } else {
-      client[ev.action].call(client, ev.speed);
+      //client[ev.action].call(client, ev.speed);
     }
   })
 
   socket.on('takeoff', function(data){
     console.log('takeoff', data);
     drone.takeoff();
-  })  
+  });
+
+  socket.on('go', function(data){
+    console.log('going to ', data);
+    targetLat = data.lat;
+    targetLon = data.lon;
+  });
   
   socket.on('land', function(data){
     console.log('land', data)
@@ -80,8 +89,12 @@ var stop = function(){
 var handleNavData = function(data){
   if ( data.demo == null || data.gps == null) return;
   battery = data.demo.batteryPercentage
-  currentLat = data.gps.latitude
-  currentLon = data.gps.longitude
+  //currentLat = data.gps.latitude
+  //currentLon = data.gps.longitude
+
+  //todo hardcoded stuff
+  currentLat = 55.754348;
+  currentLon = 48.743209;
 
   currentYaw = data.demo.rotation.yaw;
 
@@ -89,38 +102,20 @@ var handleNavData = function(data){
 
   var bearing = vincenty.distVincenty(currentLat, currentLon, targetLat, targetLon)
 
-  if(bearing.distance > 1){
+  //set the orientation
+  drone.setMagnetoYaw(bearing.initialBearing);
+
+  if(bearing.distance > 3){
     currentDistance = bearing.distance
     console.log('distance', bearing.distance)
     console.log('bearing:', bearing.initialBearing)
-    targetYaw = bearing.initialBearing
-
-    console.log('currentYaw:', currentYaw);
-    var eyaw = targetYaw - currentYaw;
-    console.log('eyaw:', eyaw);
-
-    var uyaw = yawPID.getCommand(eyaw);
-    console.log('uyaw:', uyaw);
-
-    var cyaw = within(uyaw, -1, 1);
-    console.log('cyaw:', cyaw);
-
-    client.clockwise(cyaw)
-    client.front(0.05)
+    //fly towards the phone
+    drone.front(0.02);
   } else {
-    targetYaw = null
     io.sockets.emit('waypointReached', {lat: targetLat, lon: targetLon})
     console.log('Reached ', targetLat, targetLon)
     stop()
   }
-}
+};
 
-function within(x, min, max) {
-  if (x < min) {
-      return min;
-  } else if (x > max) {
-      return max;
-  } else {
-      return x;
-  }
-}
+drone.on('navdata', handleNavData);
