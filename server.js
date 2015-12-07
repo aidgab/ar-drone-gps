@@ -25,6 +25,7 @@ io.set('destroy upgrade', false)
 var Drone = require('./drone');
 var drone = new Drone();
 
+//drone.chooseCamera(0);
 drone.disableEmergency();
 
 io.sockets.on('connection', function(socket) {
@@ -79,7 +80,7 @@ var targetLat, targetLon, targetYaw, cyaw, currentLat, currentLon,currentDistanc
 var battery = 0;
 
 var stop = function(){
-  console.log('stop', data)
+  console.log('stop msg received')
   targetYaw = null
   targetLat = null
   targetLon = null
@@ -110,7 +111,7 @@ var handleNavData = function(data){
     console.log('distance', bearing.distance)
     console.log('bearing:', bearing.initialBearing)
     //fly towards the phone
-    drone.front(0.02);
+    //drone.front(0.02);
   } else {
     io.sockets.emit('waypointReached', {lat: targetLat, lon: targetLon})
     console.log('Reached ', targetLat, targetLon)

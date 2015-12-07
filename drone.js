@@ -18,6 +18,7 @@ var PIDController = require('node-pid-controller');
 var EventEmitter = require('events').EventEmitter;
 
 client.config('general:navdata_demo', 'FALSE');
+client.config('detect:detect_type', 12);
 
 function within(x, min, max) {
     if (x < min) {
@@ -157,3 +158,20 @@ Drone.prototype.back = function (speed) {
     client.back(speed);
 };
 
+
+/**
+ * set ar.drone config
+ * @param type
+ * @param value
+ */
+Drone.prototype.config = function  (type, value){
+    client.config(type, value);
+}
+
+/**
+ * Sets the camera channel
+ * @param cameraId
+ */
+Drone.prototype.chooseCamera = function (cameraId){
+    this.config('video:video_channel', cameraId);
+}

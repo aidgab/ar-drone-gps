@@ -94,11 +94,11 @@ body{
     <pre class="log">no data</pre>
   </div>
 
-  <script src="http://maps.google.com/maps/api/js?v=3.2&sensor=false"></script>
+  <!--<script src="http://maps.google.com/maps/api/js?v=3.2&sensor=false"></script>-->
   <script src="leaflet.js"></script>
   <script src="gamepad-client.js"></script>
   <script src="gamepad-calibration.js"></script>
-  <script src="leaflet-google.js"></script>
+  <!--<script src="leaflet-google.js"></script>-->
   <script src="/dronestream/nodecopter-client.js"></script>
   <script src="jquery.js"></script>
   <script src="/socket.io/socket.io.js"></script>
@@ -133,9 +133,12 @@ body{
     
       map = L.map('map').setView([lat, lon], 20);
 
-      var googleLayer = new L.Google('SATELLITE');
-      map.addLayer(googleLayer);
-    
+//      var googleLayer = new L.Google('SATELLITE');
+      var mapLayer = new L.tileLayer('tiles/inno1/{z}/{x}/{y}.png');
+
+//      map.addLayer(googleLayer);
+      map.addLayer(mapLayer);
+
       laptop = L.marker([lat, lon], {icon: laptopIcon}).addTo(map)
       
       map.on('click', function(e) {
@@ -164,8 +167,8 @@ body{
     function setCurrentTarget(lat, lon){
       targetLat = lat
       targetLon = lon
-      alert('qwewqe');
-      socket.emit('go', {lat: targetLat, lon: targetLon})
+      socket.emit('go', {lat: targetLat, lon: targetLon});
+
     }
     
     function clearCurrentTarget(){
